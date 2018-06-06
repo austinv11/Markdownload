@@ -42,6 +42,8 @@ def index():
             payload = json.loads(request.data)
             changed = set()
             for commit in payload['commits']:
+                if '[automated]' in commit['message'].lower(): # Ignore automated commits
+                    continue
                 changed |= set([x for x in commit['added'] if md_or_config_filter(x)])
                 changed |= set([x for x in commit['removed'] if md_or_config_filter(x)])
                 changed |= set([x for x in commit['modified'] if md_or_config_filter(x)])
