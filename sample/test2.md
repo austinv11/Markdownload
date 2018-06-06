@@ -1,6 +1,6 @@
 # Test markdown
 
-ERROR
+**I was just updated!**
 
 
 ## idk
