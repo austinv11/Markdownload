@@ -15,7 +15,7 @@ path_pattern = re.compile(r'([\w\d\\/]+)(\.)([\w\d\\/]+)')
 import_pattern = re.compile(r'(\{\{)(\s)%s(\s)(\}\})' % path_pattern.pattern)  # I know, this is crappy regex
 
 
-def md_filter(x): return ".md" in x.lower() or ".markdown" in x.lower()
+def md_or_config_filter(x): return ".md" in x.lower() or ".markdown" in x.lower() or x in config_path
 
 
 def safe_glob(x):
@@ -28,6 +28,8 @@ def safe_glob(x):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    global config
+    global config_path
     print("Received webhook...")
     if request.method == 'GET':
         return "Yes I am alive"
@@ -40,9 +42,14 @@ def index():
             payload = json.loads(request.data)
             changed = set()
             for commit in payload['commits']:
-                changed |= set([x for x in commit['added'] if md_filter(x)])
-                changed |= set([x for x in commit['removed'] if md_filter(x)])
-                changed |= set([x for x in commit['modified'] if md_filter(x)])
+                changed |= set([x for x in commit['added'] if md_or_config_filter(x)])
+                changed |= set([x for x in commit['removed'] if md_or_config_filter(x)])
+                changed |= set([x for x in commit['modified'] if md_or_config_filter(x)])
+            changed_config_test = [x for x in changed if x in config_path]
+            if len(changed_config_test) != 0:
+                print("Config may have been changed! Reloading it...")
+                with open(args.config, 'r') as f:
+                    config = json.load(f)
             tracking = set()
             for tracked in config['tracked']:
                 tracking.add(tracked['input'])
@@ -127,6 +134,7 @@ def compile_md(input, output, templates, cwd):
 
 if __name__ == "__main__":
     global config
+    global config_path
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description="Runs Markdownload. (No-args simply runs the webhook server using the ./config.json file)")
@@ -137,6 +145,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Reading %s..." % args.config)
+    config_path = args.config
     if os.path.exists(args.config):
         with open(args.config, 'r') as f:
             config = json.load(f)
