@@ -1,0 +1,11 @@
+{
+  "tracked": [
+    {
+      "input": "test.md",
+      "output": "test2.md",
+      "templates": ["templates\\*", "template1.md"]
+    }
+  ],
+  "repo_dir": "sample",
+  "repo_url": "https://github.com/user/repo.git"
+}
