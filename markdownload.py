@@ -69,16 +69,20 @@ def index():
 
 
 def update():
+    global amend
     print("Updating the git repository...")
     if not os.path.exists(config['working_dir']):
-        call("git clone %s %s" % (config['repo_url'], config['working_dir']), shell=True)
+        call("git clone %s" % config['repo_url'], shell=True)
     call("git fetch && git pull", shell=True)
     parse_and_compile()
     print("Preparing to push changes...")
     call("git add .", shell=True)
-    call("git commit -m \"[Automated] Update markdown files\"", shell=True)
+    if amend:
+        call("git commit --amend --no-edit", shell=True)
+    else:
+        call("git commit -m \"[Automated] Update markdown files\"", shell=True)
     print("Pushing...")
-    call("git push", shell=True)
+    call("git push%s" % "" if not amend else " -f", shell=True)
     print("Done!")
 
 
@@ -137,14 +141,18 @@ def compile_md(input, output, templates, cwd):
 if __name__ == "__main__":
     global config
     global config_path
+    global amend
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description="Runs Markdownload. (No-args simply runs the webhook server using the ./config.json file)")
     parser.add_argument('--config', action='store', default="config.json", help="The location of the config json")
     parser.add_argument('--compile', action='store_true', default=False, help="Simply compiles the output markdown files")
     parser.add_argument('--port', action='store', type=int, default=80, help="The port of the webserver")
+    parser.add_argument('--amend', action='store_true', default=False, help="Automated commits amend to the previous one instead of making a new commit.")
 
     args = parser.parse_args()
+
+    amend = args.amend
 
     print("Reading %s..." % args.config)
     config_path = args.config
