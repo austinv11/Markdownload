@@ -46,7 +46,7 @@ def index():
             tracking = set()
             for tracked in config['tracked']:
                 tracking.add(tracked['input'])
-                tracking |= tracked['templates']
+                tracking |= set(tracked['templates'])
             if len(changed) != 0 and len(changed ^ set(chain(*[safe_glob(transform_template_path(x, config['repo_dir'])) for x in tracking]))) != 0:  # Only recompile on changes to markdown files
                 print("Recompilation needed!")
                 update()
