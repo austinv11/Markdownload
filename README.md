@@ -7,7 +7,7 @@ check for changes to tracked files and templates.
 ## Installation
 1. Ensure git is installed and has your credentials set up.
 2. Copy the markdownload.py and requirements.txt files to the desired location.
-3. Run `pip install -r requirements.txt'
+3. Run `pip install -r requirements.txt`
 4. Add a webhook to you Github repository which sends push payloads in the `application/json` format, 
 this should point to a valid ip/domain and port where you will be hosting this webhook.
 
