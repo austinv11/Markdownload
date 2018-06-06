@@ -56,7 +56,7 @@ def index():
             for tracked in config['tracked']:
                 tracking.add(tracked['input'])
                 tracking |= set(tracked['templates'])
-            if len(changed) != 0 and len(changed ^ set(chain(*[safe_glob(transform_template_path(x, config['repo_dir'])) for x in tracking]))) != 0:  # Only recompile on changes to markdown files
+            if len(changed) != 0 and len(changed ^ set(chain(*[safe_glob(transform_template_path(x, config['working_dir'])) for x in tracking]))) != 0:  # Only recompile on changes to markdown files
                 print("Recompilation needed!")
                 update()
             else:
@@ -70,8 +70,8 @@ def index():
 
 def update():
     print("Updating the git repository...")
-    if not os.path.exists(config['repo_dir']):
-        call("git clone %s %s" % (config['repo_url'], config['repo_dir']), shell=True)
+    if not os.path.exists(config['working_dir']):
+        call("git clone %s %s" % (config['repo_url'], config['working_dir']), shell=True)
     call("git fetch && git pull", shell=True)
     parse_and_compile()
     print("Preparing to push changes...")
@@ -88,7 +88,7 @@ def transform_template_path(path, cwd):
 
 def parse_and_compile():
     print("Parsing configuration...")
-    cwd = config['repo_dir']
+    cwd = config['working_dir']
     for tracked in config['tracked']:
         compile_md(tracked['input'], tracked['output'], set(chain(*[safe_glob(transform_template_path(x, cwd)) for x in tracked['templates']])), cwd)
 

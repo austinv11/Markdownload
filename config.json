@@ -6,6 +6,6 @@
       "templates": ["templates\\*", "template1.md"]
     }
   ],
-  "repo_dir": "Markdownload",
+  "working_dir": "sample",
   "repo_url": "https://github.com/austinv11/Markdownload.git"
 }
