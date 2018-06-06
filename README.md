@@ -34,4 +34,4 @@ This "exposes" those templates for use in compilation.
 
 ### Starting the server
 Simply run `python3 markdownload.py [--port 80] [--config config.json]`
-or if you just want to test the output, `python3 markdownload --compile [--config config.json]`
+or if you just want to test the output, `python3 markdownload.py --compile [--config config.json]`
