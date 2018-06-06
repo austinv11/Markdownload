@@ -28,6 +28,7 @@ def safe_glob(x):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    print("Received webhook...")
     if request.method == 'GET':
         return "Yes I am alive"
     elif request.method == 'POST':
