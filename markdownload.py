@@ -40,9 +40,9 @@ def index():
             payload = json.loads(request.data)
             changed = set()
             for commit in payload['commits']:
-                changed |= [x for x in commit['added'] if md_filter(x)]
-                changed |= [x for x in commit['removed'] if md_filter(x)]
-                changed |= [x for x in commit['modified'] if md_filter(x)]
+                changed |= set([x for x in commit['added'] if md_filter(x)])
+                changed |= set([x for x in commit['removed'] if md_filter(x)])
+                changed |= set([x for x in commit['modified'] if md_filter(x)])
             tracking = set()
             for tracked in config['tracked']:
                 tracking.add(tracked['input'])
