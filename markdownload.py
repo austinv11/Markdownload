@@ -11,8 +11,13 @@ app = Flask(__name__)
 app.debug = os.environ.get('DEBUG') == 'true'
 
 # matches "{{ filepath }}"
-path_pattern = re.compile(r'([\w\d\\/]+)(\.)([\w\d\\/]+)')
-import_pattern = re.compile(r'(\{\{)(\s)%s(\s)(\}\})' % path_pattern.pattern)  # I know, this is crappy regex
+PATH_PATTERN = re.compile(r'([\w\d\\/]+)(\.)([\w\d\\/]+)')
+IMPORT_PATTERN = re.compile(r'(\{\{)(\s)%s(\s)(\}\})' % PATH_PATTERN.pattern)  # I know, this is crappy regex
+
+PARTIAL_SNIPPET_START = '%STARTSNIPPET%'
+PARTIAL_SNIPPET_END = '%ENDSNIPPET%'
+
+MD_CODEBLOCK_EXCHANGER = {'py': 'python', 'kt': 'kotlin'}
 
 
 def md_or_config_filter(x): return ".md" in x.lower() or ".markdown" in x.lower() or x in config_path
@@ -108,11 +113,33 @@ def sanitize_join(dir1: str, dir2: str) -> str:
     return os.path.join(sdir1, sdir2)
 
 
+def scan_for_template(string, extension):
+    if PARTIAL_SNIPPET_START in string:
+        assert PARTIAL_SNIPPET_END in string
+        assert string.count(PARTIAL_SNIPPET_START) == 1
+        collected = []
+        is_collecting = False
+        for line in string.splitlines():
+            if is_collecting:
+                if PARTIAL_SNIPPET_END in line:
+                    if "md" in extension.lower() or "markdown" in extension.lower() or "txt" in extension.lower():
+                        return "\n".join(collected)  # Don't wrap markdown in code blocks
+                    else:
+                        return "```%s\n%s\n```" % (MD_CODEBLOCK_EXCHANGER.get(extension, extension), "\n".join(collected))
+                else:
+                    collected.append(line)
+            else:
+                if PARTIAL_SNIPPET_START in line:
+                    is_collecting = True
+    else:
+        return string
+
+
 def find_template(loc, templates, default='ERROR'):
     for template in templates:
         if template.endswith(loc):
             with open(template, 'r') as t:
-                return t.read()
+                return scan_for_template(t.read(), os.path.splitext(template)[1].lstrip('.'))
     return default
 
 
@@ -129,10 +156,10 @@ def compile_md(input, output, templates, cwd):
 
     with open(input, 'r') as i, open(output, 'w') as o:
         for line in i:
-            matched_strings = import_pattern.findall(line)
+            matched_strings = IMPORT_PATTERN.findall(line)
             for matched in matched_strings:
                 total_str = "".join(matched)
-                template_name = "".join(path_pattern.findall(total_str)[0])
+                template_name = "".join(PATH_PATTERN.findall(total_str)[0])
                 template = find_template(template_name, templates)
                 line = line.replace(total_str, template, 1)
             o.write(line)
